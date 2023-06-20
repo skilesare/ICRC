@@ -12,11 +12,11 @@ module {
   };
 
   public type EscrowRecord = {
-    amount: Nat;
-    buyer: Account; 
-    seller:Account; 
-    token_id: Text; 
     token: TokenSpec;
+    amount: Nat; //number of tokens
+    buyer: Account; 
+    seller: Account; // todo: could be null
+    token_id: Text; // empty "" any token
     sale_id: ?Text; //locks the escrow to a specific sale
     lock_to_date: ?Int; //locks the escrow to a timestamp
     account_hash: ?Blob; //sub account the host holds the funds in
@@ -36,7 +36,7 @@ module {
       standard: {
           #DIP20;
           #EXTFungible;
-          #ICRC1; //use #Ledger instead
+          #ICRC1;
           #Other : CandyTypes.CandyShared;
       };
     };
@@ -149,14 +149,6 @@ module {
               trx_id: TransactionID;
               extensible: CandyTypes.CandyShared;
           };
-          #deposit_withdraw : {
-              buyer: Account;
-              token: TokenSpec;
-              amount: Nat;//Nat to support cycles
-              fee: Nat;
-              trx_id: TransactionID;
-              extensible: CandyTypes.CandyShared;
-          };
           #sale_withdraw : {
               seller: Account;
               buyer: Account;
@@ -167,17 +159,13 @@ module {
               trx_id: TransactionID;
               extensible: CandyTypes.CandyShared;
           };
-          #canister_owner_updated : {
-              owner: Principal;
-              extensible: CandyTypes.CandyShared;
-          };
-          #canister_managers_updated : {
-              managers: [Principal];
-              extensible: CandyTypes.CandyShared;
-          };
-          #canister_network_updated : {
-              network: Principal;
-              extensible: CandyTypes.CandyShared;
+          #role_changed: {
+            role: Text;
+            principals: [Principal];
+            action: {
+              #add;
+              #remove;
+            };
           };
           #data : {
             data_dapp: ?Text;
@@ -379,7 +367,7 @@ module {
         icrc8_balance_of : shared query (request : [Account]) -> async [(Account, BalanceResult)];
         icrc8_balance_of_secure : shared (request : [Account]) -> async [(Account, BalanceResult)];
     
-        icrc8_owner_of : shared query [Text] -> async [(Text, Account)];
+        icrc8_owner_of : shared query [Text] -> async [(Text, Account)]; // [token_id]-> [(token_id, account)];
         icrc8_owner_of_secure : shared [Text] -> async [(Text, Account)];
 
         icrc8_collection : shared query [?[CollectionFieldRequest]] -> async [(CollectionFieldRequest, CollectionFieldResponse)];  
@@ -401,6 +389,7 @@ module {
         icrc8_chunk : shared query [ChunkRequest] -> async [(ChunkRequest, SaleInfoResponse)];
         icrc8_chunk_secure : shared query [ChunkRequest] -> async [(ChunkRequest, SaleInfoResponse)];
 
+        //todo: define path standard and anti-collision mechanism.
         http_request : shared query HttpRequest -> async HTTPResponse;
         http_request_streaming_callback : shared query StreamingCallbackToken -> async StreamingCallbackResponse;
 
