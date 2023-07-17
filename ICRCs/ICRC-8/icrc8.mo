@@ -12,11 +12,11 @@ module {
   };
 
   public type EscrowRecord = {
-    token: TokenSpec;
-    amount: Nat; //number of tokens
+    amount: Nat;
     buyer: Account; 
-    seller: Account; // todo: could be null
-    token_id: Text; // empty "" any token
+    seller: Account; 
+    token_ids: [Text]; //[] any token
+    token: TokenSpec;
     sale_id: ?Text; //locks the escrow to a specific sale
     lock_to_date: ?Int; //locks the escrow to a timestamp
     account_hash: ?Blob; //sub account the host holds the funds in
@@ -24,7 +24,7 @@ module {
 
   public type TokenSpec = {
     #ic: ICTokenSpec;
-    #extensible : CandyTypes.CandyShared; //#Class
+    #extensible : ICRC16.SharedValue; //#Class
   };
 
   public type ICTokenSpec = {
@@ -36,8 +36,9 @@ module {
       standard: {
           #DIP20;
           #EXTFungible;
-          #ICRC1;
-          #Other : CandyTypes.CandyShared;
+          #ICRC1; //attempt to query balance of escrow account to recognize escrow
+          #ICRC2; //attempt to use transferFrom to complete the deposit into escrow
+          #Other : ICRC16.SharedValue;
       };
     };
 
@@ -80,17 +81,38 @@ module {
     #transaction_count : Nat;
   };
 
+  public type CollectionFieldUpdateRequest = {
+    #logo: Text;
+    #name: Text;
+    #symbol: Text;
+    #owner: Account;
+    #managers: [Account];
+    #network: Principal;
+    #metadata : ICRC16.SharedValue; //CandyShared;
+  };
+
+  public type CollectionFieldUpdateReponse = {
+    #logo: Result<Bool, ICRC8Error>;
+    #name: Result<Bool, ICRC8Error>;
+    #symbol: Result<Bool, ICRC8Error>;
+    #owner: Result<Bool, ICRC8Error>;
+    #managers: Result<Bool, ICRC8Error>;
+    #network: Result<Bool, ICRC8Error>;
+    #metadata : Result<Bool, ICRC8Error>;
+  };
+
   public type TransactionRecord = {
       token_id: Text;
       index: Nat;  //index for this token
       collection_index: Nat; //index for the entire collection
+      caller: Principal;
       txn_type: {
           #auction_bid : {
               buyer: Account;
               amount: Nat;
               token: TokenSpec;
               sale_id: Text;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #mint : {
               from: Account;
@@ -100,7 +122,7 @@ module {
                 token: TokenSpec;
                 amount: Nat; //Nat to support cycles
               };
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #sale_ended : {
               seller: Account;
@@ -108,7 +130,7 @@ module {
               token: TokenSpec;
               sale_id: ?Text;
               amount: Nat;//Nat to support cycles
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #royalty_paid : {
               seller: Account;
@@ -118,17 +140,17 @@ module {
               token: TokenSpec;
               sale_id: ?Text;
               amount: Nat;//Nat to support cycles
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #sale_opened : {
               pricing: PricingConfigShared;
               sale_id: Text;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #owner_transfer : {
               from: Account;
               to: Account;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           }; 
           #escrow_deposit : {
               seller: Account;
@@ -137,7 +159,7 @@ module {
               token_id: Text;
               amount: Nat;//Nat to support cycles
               trx_id: TransactionID;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
           #escrow_withdraw : {
               seller: Account;
@@ -147,7 +169,22 @@ module {
               amount: Nat;//Nat to support cycles
               fee: Nat;
               trx_id: TransactionID;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
+          };
+          #library_staged : {
+              token_id: TokenID;
+              hash: ?[Nat8];
+              library_id: Text;
+              content_size: Nat;
+              extensible: ICRC16.SharedValue;
+          };
+          #library_routed : {
+              token_id: TokenID;
+              hash: ?[Nat8];
+              library_id: Text;
+              content_size: Nat;
+              container: Principal;
+              extensible: ICRC16.SharedValue;
           };
           #sale_withdraw : {
               seller: Account;
@@ -157,27 +194,37 @@ module {
               amount: Nat; //Nat to support cycles
               fee: Nat;
               trx_id: TransactionID;
-              extensible: CandyTypes.CandyShared;
+              extensible: ICRC16.SharedValue;
           };
-          #role_changed: {
-            role: Text;
-            principals: [Principal];
-            action: {
-              #add;
-              #remove;
-            };
+          #canister_owner_updated : {
+              owner: Principal;
+              extensible: ICRC16.SharedValue;
+          };
+          #canister_managers_updated : {
+              managers: [Principal];
+              extensible: ICRC16.SharedValue;
+          };
+          #canister_network_updated : {
+              network: Principal;
+              extensible: ICRC16.SharedValue;
           };
           #data : {
-            data_dapp: ?Text;
+            token_id: TokenID;
             data_path: ?Text;
             hash: ?[Nat8];
-            extensible: CandyTypes.CandyShared;
+            extensible: ICRC16.SharedValue;
+          }; //nyi
+          #permissions_updated : {
+            token_id: TokenID;
+            data_path: ?Text;
+            new_value: ICRC16.SharedValue;
+            extensible: ICRC16.SharedValue;
           }; //nyi
           #burn: {
             from: ?Account;
-            extensible: CandyTypes.CandyShared;
+            extensible: ICRC16.SharedValue;
           };
-          #extensible : CandyTypes.CandyShared;
+          #extensible : ICRC16.SharedValue;
       };
       timestamp: Int;
   };
@@ -185,7 +232,7 @@ module {
   public type NFTInfoStable = {
       current_ask : ?AskStatusShared;
       current_offers: ?[EscrowRecord];
-      metadata : CandyTypes.CandyShared;
+      metadata : ICRC16.SharedValue;
       transaction_count: Nat;
   };
 
@@ -227,7 +274,6 @@ module {
       end_date : Int;
       start_date : Int;
       min_next_bid : Nat;
-      next_dutch_timer : ?(Nat, Int);
       token : TokenSpec;
       current_escrow : ?EscrowReceipt;
       wait_for_quiet_count : ?Nat;
@@ -242,25 +288,33 @@ module {
   };
 
   public type StorageInfoRequest = {
-        #allocated_storage;
-        #available_space;
-        #allocations :(?Nat, ?Nat);
-        #gateway;
+    #allocated_storage;
+    #available_space;
+    #allocations :(?Nat, ?Nat);
+    #gateway;
+  };
 
-    };
+  public type StorageInfoResponse = {
+      #allocated_storage : Nat;
+      #available_space : Nat;
+      #allocations : (?[AllocationRecordStable], Nat); //list, total count
+      #gateway : Principal;
+  };
 
-    public type StorageInfoResponse = {
-        #allocated_storage : Nat;
-        #available_space : Nat;
-        #allocations : (?[AllocationRecordStable], Nat); //list, total count
-        #gateway : Principal;
-    };
+
+  public type StorageUpdateRequest = {
+    #add_container : Principal;
+  };
+
+  public type StorageUpdateResponse = {
+    #add_container : Principal;
+  };
 
   public type EscrowReceipt = {
     amount: Nat; //Nat to support cycles
     seller: Account;
     buyer: Account;
-    token_id: Text; // empty string is available for any token_id
+    token_ids: [Text]; // empty string is available for any token_id
     token: TokenSpec;
   };
 
@@ -268,13 +322,14 @@ module {
 
   public type AskFeature = {
     #atomic;
+    #broker: Princpal;
     #buy_now: Nat;
     #wait_for_quiet: {
         extension: Nat64;
         fade: Float;
         max: Nat
     };
-    #allow_list : [Principal];
+    #allow_list : [Account];
     #notify: [Principal];
     #reserve: Nat;
     #start_date: Int;
@@ -288,8 +343,10 @@ module {
       #timeout: Nat;
     };
     #token: TokenSpec;
+    #token_ids: [Text];
     #dutch: DutchParams;
-    #kyc: Principal;
+    #icrc17_kyc: Principal;
+    #escrow_receipt: EscrowReceipt;  //used for primary sales for seller to ask to fulfill an escrowed amount.
   };
 
   public type DutchParams = {
@@ -313,7 +370,7 @@ module {
 
   public type SaleInfoResponse = {
     #active : {
-        records : [(Text, ?AskStatusShared)];
+        records : [(Blob, ?AskStatusShared)];
         eof : Bool;
         count : Nat;
     };
@@ -323,7 +380,7 @@ module {
         count : Nat;
     };
     #status : ?AskStatusShared;
-    #escrow_info : AccountInfo;
+    #escrow_info : SubAccountInfo;
   };
 
   public type SubAccountInfo = {
@@ -362,78 +419,163 @@ module {
     library_id : Text;
   };
 
+  public type ICRC8Errors = {
+    #GenericError : {
+      message : Text;
+      code : Nat;
+    };
+  };
+
+
+  public type BidFeature = {
+    #broker: Princpal;
+    #escrow: EscrowReceipt;
+    #sale_id: Blob;
+  };
+
+  public type TokenID = Text;
+
+  public type NFTUpdate = {
+    #replace: (TokenID, Path, ICRC16.SharedValue, ?ICRC16.SharedValue); //second nullable value is the expected current value and function will assert it is still the same.
+    #write_permission: ICRC16.UpdateRequestShared(TokenID, Path, ICRC16.SharedValue);
+    #read_permission: ICRC16.UpdateRequestShared(TokenID, Path, ICRC16.SharedValue);
+    #permissions: ICRC16.UpdateRequestShared(TokenID, Path, ICRC16.SharedValue);
+    #library: {
+      token_id: TokenID;
+      library_id: Text;
+      library_data: ?ICRC16.SharedValue;
+      chunk : Nat; 
+      content: Blob;
+    };
+  };
+
+  public type ManageSaleRequest = {
+    #end_sale : TokenID; //token_id
+    #recognize_escrow : EscrowRequest;
+    #refresh_bids : ?Account;
+    #withdraw : WithdrawRequest;
+    #reject : RejectDescription;
+    #distribute_sale : Account;
+  };
+
+  public type EscrowRequest{
+    token: TokenSpec;
+    seller: Account;
+    buyer: Account;
+    token_ids: [TokenID]; //[] = any token 
+    amount: Nat;
+    sale_id: ?Blob;
+  };
+
+  public type WithdrawRequest = {
+    #escrow : WithdrawDescription;
+    #sale : WithdrawDescription;
+  };
+
+  public type WithdrawDescription = {
+    buyer : Account;
+    seller : Account;
+    token_id : Text;
+    token : TokenSpec;
+    amount : Nat;
+    withdraw_to : ?Account;
+  };
+
+  public type RejectDescription = {
+    buyer : Account;
+    seller : Account;
+    token_id : Text;
+    token : TokenSpec;
+  };
+
+  public type ManageSaleResponse = 
+    #end_sale : [(TokenID, TransactionRecord)]; //trx record if succesful
+    #recognize_escrow : RecognizeEscrowResponse;
+    #refresh_offers : Bool;
+    #withdraw : [(TokenID, TransactionRecord)];
+    #distribute_sale : [(TokenID, TransactionRecord)];
+  };
+
+  public type RecognizeEscrowResponse = {
+    receipt : EscrowReceipt;
+    transactions : [(TokenID, TransactionRecord)];
+  };
+
+  public type TransferArgs = record {
+    spender_subaccount: ?Blob; // the subaccount of the caller (used to identify the spender)
+    from : Account;
+    to : Account;
+    token_ids : [TokenID];
+    // type: leave open for now
+    memo : ?Blob;
+    created_at_time : ?Nat64;
+    is_atomic : ?Bool;
+  };
+
+  public type TransferError = variant {
+      #Unauthorized: { token_ids : [TokenID] };
+      #TooOld;
+      #CreatedInFuture : { ledger_time: Nat64 };
+      #Duplicate : { duplicate_of : Nat };
+      #TemporarilyUnavailable;
+      #GenericError :  { error_code : Nat; message : Text };
+  };
+  public type TransferResult =  [(TransferArgs, {#Ok : [(TokenID, TransactionRecord)]; #Err:TransferError})];
+
+  public type ApprovalArgs =  {
+      from_subaccount : ?Blob;
+      spender : Account;    // Approval is given to an ICRC Account
+      token_ids : ?[TokenID];            // TBD: change into variant?
+      expires_at : ?Nat64;
+      memo : ?Blob;
+      created_at_time : ?Nat64; 
+  };
+
+  public type ApprovalError =  {
+      #Unauthorized :  [TokenID];
+      #TooOld;
+      #TemporarilyUnavailable;
+      #GenericError : { error_code : Nat; message : Text };
+  };
+
+  public type ApprovalResult =  [(ApprovalArgs, {#Ok : [(TokenID, TransactionRecord)]; #Err:ApprovalError})];
 
   public type Service = actor {
         icrc8_balance_of : shared query (request : [Account]) -> async [(Account, BalanceResult)];
-        icrc8_balance_of_secure : shared (request : [Account]) -> async [(Account, BalanceResult)];
-    
-        icrc8_owner_of : shared query [Text] -> async [(Text, Account)]; // [token_id]-> [(token_id, account)];
-        icrc8_owner_of_secure : shared [Text] -> async [(Text, Account)];
-
+        icrc8_owner_of : shared query [TokenID] -> async [(TokenID, Account)];
         icrc8_collection : shared query [?[CollectionFieldRequest]] -> async [(CollectionFieldRequest, CollectionFieldResponse)];  
-        icrc8_collection_secure : shared [?[CollectionFieldRequest]] -> async [(CollectionFieldRequest, CollectionFieldResponse)];
-
-        icrc8_history : shared query (?[Text], ?Nat, ?Nat) -> async [TransactionRecord]; //(TokenID Filter, skip, take)
-        icrc8_history_secure : shared (?[Text], ?Nat, ?Nat) -> async [TransactionRecord]; //(TokenID Filter, skip, take)
-
-        icrc8_nft_info : shared query [(Text, ?[NFTFieldRequest])] -> async [(Text, NFTFieldRequest, NFTFieldResponse)];
-        icrc8_nft_info_secure : shared [(Text, ?[NFTFieldRequest])] -> async [(Text, NFTFieldRequest, NFTFieldResponse)];
-
+        icrc8_history : shared query (?[TokenID], ?Nat, ?Nat) -> async [TransactionRecord]; //(TokenID Filter, skip, take)
+        icrc8_nft_info : shared query [(TokenID, ?[NFTFieldRequest])] -> async [(TokenID, NFTFieldRequest, NFTFieldResponse)];
         icrc8_sale_info : shared query [SaleInfoRequest] -> async [(SaleInfoRequest, SaleInfoResponse)];
-        icrc8_sale_info_secure : shared [SaleInfoRequest] -> async [(SaleInfoRequest, SaleInfoResponse)];
-
-
         icrc8_storage_info : shared query [StorageInfoRequest] -> async [(StorageInfoRequest, StorageInfoResponse)];
-        icrc8_storage_info_secure : shared [StorageInfoRequest] -> async [(StorageInfoRequest, StorageInfoResponse)];
-
         icrc8_chunk : shared query [ChunkRequest] -> async [(ChunkRequest, SaleInfoResponse)];
-        icrc8_chunk_secure : shared query [ChunkRequest] -> async [(ChunkRequest, SaleInfoResponse)];
 
-        //todo: define path standard and anti-collision mechanism.
+        icrc8_token_id_to_nat : shared query [TokenID] -> async [Nat];
+
         http_request : shared query HttpRequest -> async HTTPResponse;
         http_request_streaming_callback : shared query StreamingCallbackToken -> async StreamingCallbackResponse;
 
-        
-    };
+        //update functions
+        icrc8_collection_update : [CollectionFieldUpdateRequest] -> async [CollectionFieldUpdateResponse];
 
+        icrc8_ask : [[AskRequest]] -> async [(TokenID, TransactionRecord)]; //returns (Token_ID, TransactionIndex)
+        icrc8_bid : [[BidRequest]] -> async [(TokenID, TransactionRecord)]; //returns (Token_ID, TransactionIndex)
+        icrc8_mint : [(Text, Account)] -> async [(TokenID, TransactionRecord)]; //returns (Token_ID, TransactionIndex)
+        icrc8_nft_update: [NFTUpdate] -> async [(TokenID, TransactionRecord)];
+        icrc8_add_owner: [(TokenID, Account)] -> async [(TokenID, TransactionRecord)];
+        icrc8_sale : [ManageSaleRequest] -> async[(ManageSaleRequest, ManageSaleResponse)];
 
-    ///todo
-    /* collection_update_nft_origyn : (ManageCollectionCommand) -> async OrigynBoolResult;
-        collection_update_batch_nft_origyn : ([ManageCollectionCommand]) -> async [OrigynBoolResult];
-        cycles : shared query () -> async Nat;
-        get_access_key : shared () -> async OrigynTextResult;
-        getEXTTokenIdentifier : shared query Text -> async Text;
+        //same as ICRC7 but allows for batch submission and text token ids, complex return type
+        icrc8_transfer : [TransferArgs] -> async TransferResult;
+        icrc8_transferFrom : [(TransferArgs)] -> TransferResult;
+        icrc8_approve : [(ApprovalArgs)] -> async ApprovalResult;
 
-        governance_nft_origyn : shared (request : GovernanceRequest) -> async GovernanceResult;
-        
-        http_access_key : shared () -> async OrigynTextResult;
-        http_request : shared query HttpRequest -> async HTTPResponse;
-        http_request_streaming_callback : shared query StreamingCallbackToken -> async StreamingCallbackResponse;
+        //ability to access permissioned data via https, either by query string or header. It is unlikely we can get this
+        //completely secure, but we may be able to make sure that at least the secret data isn't left 'at rest' on the nod
+        icrc8_access_key : (Blob) -> async Blob; //request an encrypted key that can be used to create an access token.
 
-        manage_storage_nft_origyn : shared ManageStorageRequest -> async ManageStorageResult;
-        market_transfer_nft_origyn : shared MarketTransferRequest -> async MarketTransferResult;
-        market_transfer_batch_nft_origyn : shared [MarketTransferRequest] -> async [MarketTransferResult];
-        
-        mint_nft_origyn : shared (Text, Account) -> async OrigynTextResult;
-        mint_batch_nft_origyn : shared (tokens : [(Text, Account)]) -> async [OrigynTextResult];
-        nftStreamingCallback : shared query StreamingCallbackToken -> async StreamingCallbackResponse;
-        
-        update_app_nft_origyn : shared NFTUpdateRequest -> async NFTUpdateResult;
-        
-        share_wallet_nft_origyn : shared ShareWalletRequest -> async OwnerUpdateResult;
-        sale_nft_origyn : shared ManageSaleRequest -> async ManageSaleResult;
-        sale_batch_nft_origyn : shared (requests : [ManageSaleRequest]) -> async [ManageSaleResult];
-        
-        stage_library_nft_origyn : shared StageChunkArg -> async StageLibraryResult;
-        stage_library_batch_nft_origyn : shared (chunks : [StageChunkArg]) -> async [StageLibraryResult];
-        stage_nft_origyn : shared { metadata : CandyTypes.CandyShared } -> async OrigynTextResult;
-        stage_batch_nft_origyn : shared (request : [{ metadata : CandyTypes.CandyShared }]) -> async [OrigynTextResult];
-        storage_info_nft_origyn : shared query () -> async StorageMetricsResult;
-        storage_info_secure_nft_origyn : shared () -> async StorageMetricsResult;
-        transfer : shared EXTTransferRequest -> async EXTTransferResponse;
-        transferEXT : shared EXTTransferRequest -> async EXTTransferResponse;
-        transferFrom : shared (Principal, Principal, Nat) -> async DIP721.DIP721NatResult;
-        transferFromDip721 : shared (Principal, Principal, Nat) -> async DIP721.DIP721NatResult;
-        whoami : shared query () -> async Principal; */
+        //multi canister storage should maybe be its own ICRC?
+        icrc8_storage_update : [StorageUpdateRequest] -> [StorageUpdateReponse];
+  };
 
 }
