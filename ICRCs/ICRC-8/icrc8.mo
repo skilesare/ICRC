@@ -540,11 +540,23 @@ module {
 
   public type ApprovalResult =  [(ApprovalArgs, {#Ok : [(TokenID, TransactionRecord)]; #Err:ApprovalError})];
 
+  public type TransactionResult = {
+    //response mirrors icrc3
+    transactions: [TransactionRecord]; //(TokenID Filter, skip, take)
+    log_length: Nat;
+    certificate: opt Blob;
+    archived_transactions: [
+      {
+        args: {start: Nat; length: Nat};
+        callback: query ({start: Nat; length: Nat}) -> async TransactionResult
+    ]
+  };
+
   public type Service = actor {
         icrc8_balance_of : shared query (request : [Account]) -> async [(Account, BalanceResult)];
         icrc8_owner_of : shared query [TokenID] -> async [(TokenID, Account)];
         icrc8_collection : shared query [?[CollectionFieldRequest]] -> async [(CollectionFieldRequest, CollectionFieldResponse)];  
-        icrc8_history : shared query (?[TokenID], ?Nat, ?Nat) -> async [TransactionRecord]; //(TokenID Filter, skip, take)
+        icrc8_history : shared query (?[TokenID], ?Nat, ?Nat) -> async TransactionResult;
         icrc8_nft_info : shared query [(TokenID, ?[NFTFieldRequest])] -> async [(TokenID, NFTFieldRequest, NFTFieldResponse)];
         icrc8_sale_info : shared query [SaleInfoRequest] -> async [(SaleInfoRequest, SaleInfoResponse)];
         icrc8_storage_info : shared query [StorageInfoRequest] -> async [(StorageInfoRequest, StorageInfoResponse)];
