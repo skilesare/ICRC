@@ -101,47 +101,84 @@ module {
     #metadata : Result<Bool, ICRC8Error>;
   };
 
+  //from ICRC3
+  public type Value = { 
+    #Blob : Blob; 
+    #Text : Text; 
+    #Nat : Nat; // do we need this or can we just use Int?
+    #Int : Int;
+    #Array : [Value]; 
+    #Map :[(Text, Value)]; 
+  };
+
+  /*Schemas
+    type Account = [ blob(principal); blob(subaccount)? ];
+
+    type ICRC8_IC_TokenSpec = {
+      canister: Blob
+      name: Text; //ICRC1; ICRC2; EXTFungible; DIP20;
+      fee: Nat?
+      symbol: Text;
+      decimal: Nat;
+      id: Nat?; //for multi token canisters
+    };
+
+    type ICRC8_tokenSpec = {
+      type: Text; //default is ic.  Leave available for ETH or BTC
+      value: Map;
+    };
+    
+    ICRC8_Common = {
+      "token_id": Nat;
+      "memo": Blob;
+      "ts": Nat?;
+      "ex": Value; //extensible
+    };
+
+    ICRC8_Market_Actors = {
+      "buyer": Account;
+      "seller": Account;
+    };
+
+    ICRC8_Auction_Bid = ICRC8_Common and ICRC8_Market_Actors and ICRC8_tokenSpec and {
+      "op": "auction_bid";
+      "amount": Nat;
+      "sale_id": Nat;
+    };
+
+    ICRC8_Mint = ICRC8_Common and {
+      "op": "mint";
+      "from": Account
+      "to": Account;
+      //amount and token are null if it was not a sale for value
+      "token": ICRC8_tokenSpec?
+      "amount": Nat?;
+    };
+
+    ICRC8_Sale_Ended = ICRC8_Common and ICRC8_Market_Actors and ICRC8_tokenSpec {
+      "op": "sale_ended";
+      "amount": Nat?;
+      "sale_id": Nat?;
+    };
+
+    ICRC8_Royalty_Paid = ICRC8_Common and ICRC8_Market_Actors and ICRC8_tokenSpec {
+      "op": "royalty_paid";
+      "receiver": Account;
+      "tag": Text;
+      "amount": Nat?;
+      "sale_id": Nat?
+      };
+
+    //todo....rest of transactions
+      
+  */
   public type TransactionRecord = {
       token_id: Text;
       index: Nat;  //index for this token
       collection_index: Nat; //index for the entire collection
       caller: Principal;
       txn_type: {
-          #auction_bid : {
-              buyer: Account;
-              amount: Nat;
-              token: TokenSpec;
-              sale_id: Text;
-              extensible: ICRC16.SharedValue;
-          };
-          #mint : {
-              from: Account;
-              to: Account;
-              //nyi: metadata hash
-              sale: ?{
-                token: TokenSpec;
-                amount: Nat; //Nat to support cycles
-              };
-              extensible: ICRC16.SharedValue;
-          };
-          #sale_ended : {
-              seller: Account;
-              buyer: Account;
-              token: TokenSpec;
-              sale_id: ?Text;
-              amount: Nat;//Nat to support cycles
-              extensible: ICRC16.SharedValue;
-          };
-          #royalty_paid : {
-              seller: Account;
-              buyer: Account;
-              receiver: Account;
-              tag: Text;
-              token: TokenSpec;
-              sale_id: ?Text;
-              amount: Nat;//Nat to support cycles
-              extensible: ICRC16.SharedValue;
-          };
+          
           #sale_opened : {
               pricing: PricingConfigShared;
               sale_id: Text;
