@@ -7,11 +7,9 @@
 
 ## 1. Overview
 
-ICRC-59 defines the interface for Non-Fungible Tokens (NFTs) on the Internet Computer with static metadata that does not change after minting. 
+ICRC-59 defines the interface for **Non-Fungible Tokens (NFTs)** on the Internet Computer with **static metadata** that does not change after minting. 
 
-### 1.1 Goals
-
-The goal of ICRC-59 is to establish a comprehensive standard for Non-Fungible Tokens (NFTs) on the Internet Computer ecosystem that encapsulates all aspects of static metadata management within NFTs. Specifically, ICRC-59 strives to:
+### Goals
 
 1. **Define a Standardized Mint Interface:** Provide a clearly defined protocol for the minting of NFTs with static metadata that does not change post-minting. This includes specifying how metadata and associated media are included during the minting process and how they contribute to the uniqueness and identity of the NFT.
 
@@ -128,7 +126,7 @@ In the realm of non-fungible tokens (NFTs), an essential aspect is the managemen
 
 ICRC-56 serves as a foundational layer for storing files on the Internet Computer (IC) in an organized and accessible manner. For NFTs adhering to the ICRC-59 standard, ICRC-56 facilitates the management of on-chain media files associated with NFTs. The integration ensures that files are not only securely stored but also readily accessible, closely linked with the NFT they pertain to. The file system structure enables the placement of NFT-specific media under a unique path that correlates directly with the NFT ID, thereby ensuring efficient retrieval and management.
 
-Files must be staged in the file system before the associated NFT is minted, guaranteeing that all referenced media is available upon the NFT's creation. This staging process is crucial for ensuring that the NFT's integrity and the immutability of its linked media content are maintained and that the ultimate hash of the NFT stays consistent.
+Files MUST be staged in the file system before the associated NFT is minted, guaranteeing that all referenced media is available upon the NFT's creation. This staging process is crucial for ensuring that the NFT's integrity and the immutability of its linked media content are maintained and that the ultimate hash of the NFT stays consistent.
 
 #### `icrc59:library` Schema
 
@@ -166,7 +164,7 @@ This library type specifies that the media file is located within another icrc56
 
 Example:
 
-("icrc59:library:location", "jwcfb-hyaaa-aaaaj-aac4q-cai:icrc56/collection/sample-file.txt")
+`("icrc59:library:location", "jwcfb-hyaaa-aaaaj-aac4q-cai:icrc56/collection/sample-file.txt")`
 
 ##### icrc59:location:icrc56collection
 
@@ -174,7 +172,7 @@ This library type specifies that the media file is located within the collection
 
 Example:
 
-("icrc59:library:location", "/icrc56/collection/sample-file.txt")
+`("icrc59:library:location", "/icrc56/collection/sample-file.txt")`
 
 ##### icrc59:location:icrc56nft
 
@@ -182,7 +180,7 @@ This type indicates that the media file resides in the NFT's specific media libr
 
 Example:
 
-("icrc59:library:location", "/icrc56/-/3948594/sample-file.txt")
+`("icrc59:library:location", "/icrc56/-/3948594/sample-file.txt")`
 
 ##### icrc59:location:web
 
@@ -190,7 +188,7 @@ Specifies that the media file is hosted on the web, accessible via a fully defin
 
 Example:
 
-("icrc59:library:location", "https://mydomain.com/nft/47584/pfp.jpg")
+`("icrc59:library:location", "https://mydomain.com/nft/47584/pfp.jpg")`
 
 ##### icrc59:location:ipfs
 
@@ -198,7 +196,7 @@ Indicates that the file is stored on the InterPlanetary File System (IPFS), prov
 
 Example:
 
-("icrc59:library:location", "/ipfs/QmTzQ1Nn3fVZErF5uhYf4D3emKRgxYm3LjdhKpK5UH8Dgj")
+`("icrc59:library:location", "/ipfs/QmTzQ1Nn3fVZErF5uhYf4D3emKRgxYm3LjdhKpK5UH8Dgj")`
 
 ##### icrc59:location:btcordinal
 
@@ -206,7 +204,7 @@ This library type denotes that the file is a bitcoin ordinal, integrating unique
 
 Example:
 
-("icrc59:library:location", "/ordinal/680000/245/2/1")
+`("icrc59:library:location", "/ordinal/680000/245/2/1")`
 
 following:
 
@@ -218,7 +216,7 @@ Specifies that the file is stored on Arweave, a service offering permanent, bloc
 
 Example:
 
-("icrc59:library:location", "https://arweave.net/1a2b3c4d5e6f7g8h9i")
+`("icrc59:library:location", "https://arweave.net/1a2b3c4d5e6f7g8h9i")`
 
 ##### icrc59:location:evm
 
@@ -226,22 +224,22 @@ Represents a file inscribed in an Ethereum Virtual Machine (EVM) contract, encap
 
 Example:
 
-("icrc59:library:location", "/evm/1/0xContractAddress123/storage/0xb10be7f45a036a2e2ca02aee5eae3ab60dac98130c1e9079a0756b444f21e898
-")
+`("icrc59:library:location", "/evm/1/0xContractAddress123/storage/0xb10be7f45a036a2e2ca02aee5eae3ab60dac98130c1e9079a0756b444f21e898
+")`
 
 Transaction input:
-/evm/<chain-id>/<contract-address>/<block-number>/<transaction-index>/input/<start-byte>:<end-byte>
+`/evm/<chain-id>/<contract-address>/<block-number>/<transaction-index>/input/<start-byte>:<end-byte>`
 
 `/evm/1/0xContractAddress123/1200000/15/input/64:128`
 
 Contract Storage:
-/evm/<chain-id>/<contract-address>/storage/<variable-hash>
+`/evm/<chain-id>/<contract-address>/storage/<variable-hash>`
 
 `/evm/1/0xContractAddress123/storage/0xb10be7f45a036a2e2ca02aee5eae3ab60dac98130c1e9079a0756b444f21e898`
 
 Emitted log:
 
-/evm/<chain-id>/<contract-address>/<block-number>/<transaction-index>/logs/<log-index>/<topic-index>
+`/evm/<chain-id>/<contract-address>/<block-number>/<transaction-index>/logs/<log-index>/<topic-index>`
 
 `/evm/1/0xContractAddress123/1200000/15/logs/0/1`
 
@@ -401,11 +399,11 @@ type BurnResponse = {
 
 ### 6.1 Retrieving NFT Metadata
 
-Metadata MAY ve retrieved via the standard ICRC-7 methods of icrc7_collection_metadata and icrc7_token_metadata
+Metadata MAY ve retrieved via the standard ICRC-7 methods of `icrc7_collection_metadata` and `icrc7_token_metadata`.
 
 #### Overview
 
-The retrieval of NFT metadata in ICRC-59 introduces enhancements that cater to the static nature of the NFTs it concerns. The queries leverage ICRC-7's groundwork, applying specific modifications to accommodate static metadata and its cryptographic verification via hashes. These adaptations ensure that both the integrity of an NFT's metadata and its association with the NFT can be validated efficiently.
+The retrieval of NFT metadata in ICRC-59 introduces enhancements that cater to the static nature of the NFTs it concerns. These adaptations ensure that both the integrity of an NFT's metadata and its association with the NFT can be validated efficiently.
 
 #### icrc59_tokens Query
 
@@ -416,8 +414,8 @@ The retrieval of NFT metadata in ICRC-59 introduces enhancements that cater to t
 ##### Return Structure
 
 The query returns a Vector of tuples, with each tuple containing:
-- **token_id**: As defined in ICRC-7, representing the unique identifier of the NFT.
-- **blob**: A Blob representing the cryptographic hash of the NFT's associated static metadata. This hash serves as a fingerprint of the NFT's content, establishing a verifiable link between the NFT and its metadata at the time of minting.
+- **token_id** - nat: As defined in ICRC-7, representing the unique identifier of the NFT.
+- **hash** - blob: A 32 byte Blob representing the cryptographic hash of the NFT's associated static metadata. This hash serves as a fingerprint of the NFT's content, establishing a verifiable link between the NFT and its metadata at the time of minting.
 
 #### icrc59_token_metadata Query
 
@@ -428,9 +426,9 @@ The query returns a Vector of tuples, with each tuple containing:
 ##### Return Structure
 
 The response is a tuple with the following elements:
-- **token_id**: The unique identifier of the queried NFT.
-- **MetadataMap**: A map of metadata attributes following the ICRC-7 `Value` type definitions, presenting the static metadata properties of the NFT.
-- **Hash**: A Blob representing the cryptographic hash of the NFT's static metadata. This hash facilitates the verification of the metadata's authenticity and immutability.
+- **token_id** - nat: The unique identifier of the queried NFT.
+- **MetadataMap** - vec (text, Value): A map of metadata attributes following the ICRC-7 `Value` type definitions, presenting the static metadata properties of the NFT.
+- **Hash** - blob : A Blob representing the cryptographic hash of the NFT's static metadata. This hash facilitates the verification of the metadata's authenticity and immutability.
 
 #### Special Considerations for Staged Items
 
@@ -440,11 +438,11 @@ For NFTs that are staged but not yet minted, the query introduces conditional be
 
 ### 6.2 Ownership and Existence
 
-Ownership methods and behavior is inherited form ICRC-7.
+Ownership methods and behavior is inherited from ICRC-7.
 
 ## 7. ICRC-3 Transaction Log Operations
 
-ICRC-59 leverages the block schema defined in ICRC-3 for recording transaction logs. These logs capture essential actions performed within the ecosystem, such as minting, burning, and staging NFTs, thereby ensuring transparency and traceability. This section outlines the utilization of existing ICRC-7 and ICRC-56 block schemas and introduces the `59stage` schema specific to ICRC-59 for staging operations.
+ICRC-59 leverages the block schema defined in ICRC-3 for recording transaction logs. These logs capture essential actions performed within the ecosystem, such as minting, burning, and staging NFTs, thereby ensuring transparency and traceability. 
 
 ### 7.1 Utilizing ICRC-7 Schemas
 
@@ -540,19 +538,6 @@ This scheme MAY be used as an alternative, treating the NFT ID as a string. It p
 ##### File Certification:
 
 All media files accessed via these schemes SHOULD be certified using the Internet Computer v2 certification scheme to ensure their authenticity and integrity.
-
-#### 8.4 Security Considerations
-
-While providing HTTP access to NFT metadata and media, security considerations MUST be adhered to, including but not limited to:
-- Ensuring that metadata and media files are served over HTTPS to protect against man-in-the-middle attacks.
-- Implementing proper access control mechanisms to prevent unauthorized updates to NFT metadata and media files.
-- Utilizing the Internet Computer's certification capabilities to guarantee the authenticity and integrity of served content.
-
-#### 8.5 Implementation Recommendations
-
-- NFT canisters SHOULD provide clear documentation on the URLs and formats used for accessing metadata and media files.
-- Developers are encouraged to implement caching strategies to optimize the delivery of NFT content, especially for frequently accessed media files.
-- Consideration should be given to the scalability of the HTTP access infrastructure, ensuring that it can handle high demand without compromising performance or availability.
 
 ## 9. Transaction Deduplication, Compatibility, and Security
 
