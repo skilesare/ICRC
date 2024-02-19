@@ -4,15 +4,11 @@
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
 |60|Dynamic NFT Metadata Interface|Austin Fatheree - @skilesare|TBD|Idea|Standards Track - NFT, Metadata|TBD|
 
-ICRC-60 extends the ICRC-59 standard to define the interface for Non-Fungible Tokens (NFTs) on the Internet Computer with dynamic metadata that can change post-minting. This standard outlines the protocols for minting, burning, updating, and querying dynamic NFTs and their metadata, ensuring compatibility with ICRC-59, ICRC-3, ICRC-56, and other related protocols.
-
-This standard caters to NFTs whose metadata and possibly associated file content may need to be altered or updated after minting, providing a structured approach for these interactions.
-
 ## 1. Overview
 
-### 1.1 Goals
+ICRC-60 extends the ICRC-59 standard to define the interface for **Non-Fungible Tokens (NFTs)** on the Internet Computer with **dynamic metadata** that can change post-minting. This standard outlines the protocols for minting, burning, updating, and querying dynamic NFTs and their metadata, ensuring compatibility with ICRC-59, ICRC-3, ICRC-56, and other related protocols.
 
-The primary goal of the ICRC-60 ("Dynamic NFT Metadata Interface") standard is to extend the foundational principles established in ICRC-59 to facilitate the creation, management, and interaction with Non-Fungible Tokens (NFTs) that feature dynamic metadata capabilities on the Internet Computer ecosystem. These NFTs, unlike their static counterparts, are designed to allow for the modification of their metadata properties post-minting. The specific objectives of ICRC-60 include:
+### Goals
 
 1. **Enable Dynamic Metadata Amendments**: To provide a standardized framework that supports the modification of NFT metadata after the initial minting process. This includes both the refinement of existing metadata fields and the addition of new information as the NFT evolves.
 
@@ -42,7 +38,7 @@ The **ICRC-16 Metadata Standard** is an integral part of the ICRC-60 standard, d
 
 #### Purpose
 
-The primary purpose of this extension is to accommodate NFTs that require metadata to be mutable or immutable after the minting process. This requirement arises in various scenarios where the asset or information represented by the NFT evolves or needs updating over time. For example, imagine a web3 game that uses NFTs as inventory and wants to maintain statistics inside the NFT that travel with it. The extension ensures that such modifications are managed systematically, maintaining the integrity and traceability of changes.
+The primary purpose of this extension is to accommodate NFTs that require metadata to be mutable or immutable after the minting process. This requirement arises in various scenarios where the asset or information represented by the NFT evolves or needs updating over time. For example, imagine a web3 game that uses NFTs as inventory and wants to maintain statistics inside the NFT that travel with it. The extension ensures that such modifications are managed systematically, maintaining the integrity and traceability of changes. As the data in these NFTs may become quite large, the ICRC16 standard provides the ability for library developers to produce optimized and efficient data access methods that efficiently store and retrieve NFT data.
 
 #### Data Structure
 
@@ -67,15 +63,15 @@ type ICRC16 = variant {
     Bool : bool;
     Blob : blob;
     Class : vec (record {name : text; value: ICRC16; immutable: bool});
-    #Principal : principal;
-    #Floats : vec float;
-    #Nats: vec nat;
-    #Array : vec ICRC16;
-    #Option : opt ICRC16;
-    #Bytes : vec nat8;
-    #ValueMap : vec (record (ICRC16, ICRC16))>;
-    #Map : vec (record {Text; ICRC16});
-    #Set : vec ICRC16;
+    Principal : principal;
+    Floats : vec float;
+    Nats: vec nat;
+    Array : vec ICRC16;
+    Option : opt ICRC16;
+    Bytes : vec nat8;
+    ValueMap : vec (record (ICRC16, ICRC16))>;
+    Map : vec (record {Text; ICRC16});
+    Set : vec ICRC16;
 };
 
 type DynamicStageArg = record {
@@ -94,11 +90,11 @@ The metadata structure for dynamic NFTs under ICRC-60 is designed to extend the 
 
 ### Basic Structure
 
-At its core, the metadata structure of a dynamic NFT retains compatibility with ICRC-59, ensuring that fundamental metadata attributes such as `name`, `description`, and media references are present. These attributes serve as the static base upon which dynamic features are built.
+At its core, the metadata structure of a dynamic NFT retains compatibility with ICRC-59, ensuring that fundamental expected static areas of the NFT and media libraries are present. These attributes serve as the static base upon which dynamic features are built.  We add an apps node where dynamic data can reside and update library behavior to accommodate changing library files.
 
 ### Mutability with "icrc60:apps"
 
-A distinctive feature of ICRC-60 is the "icrc60:apps" node within the metadata. This node is a sophisticated addition that brings dynamic capabilities to NFT metadata. It outlines the permissions and structure for apps to interact with and update specific parts of the NFT's metadata.
+A distinctive feature of ICRC-60 is the `icrc60:apps` node within the top level metadata. This node brings dynamic capabilities to NFT metadata. It outlines the permissions and structure for apps to interact with and update specific parts of the NFT's metadata.
 
 Structure:
 - Each application or dApp wanting to interact with the NFT must be declared within the "icrc60:apps" node.
@@ -125,7 +121,7 @@ To facilitate the secure and controlled updating of dynamic NFT metadata, ICRC-6
 
 ### Permission Structures
 
-1. **Public ("icrc60:public"):** Any user can read the metadata. Public is not allowed on write or permission nodes.
+1. **Public ("icrc60:public"):** Any user can read the metadata. `icrc60:public` is not allowed on write or permission nodes.
    
 2. **Owner Exclusive ("icrc60:nft_owner", "icrc60:collection_owner", "icrc60:collection_any_nft_owner"):** Only the NFT owner, collection owner, or owner of another NFT in the collection can update the metadata, with read permissions potentially being more open.
 
@@ -200,9 +196,15 @@ The only other data that may change should be in the icrc60:system node which ma
 
 The system node should not be included in staged metadata and should be generated by the system upon staging.
 
+As indicated in the example, future ICRCs may update and define the behavior of data inside the system node.
+
 ## 4.4 Collection Metadata
 
 Collection metadata in the ICRC-60 ("Dynamic NFT Metadata Interface") standard refers to the overarching data that describes the entire collection of NFTs within a specific ecosystem or platform on the Internet Computer. Unlike individual NFT metadata that pertains to singular tokens, collection metadata encompasses attributes and details relevant to the collection as a whole. The ICRC-60 standard integrates the concept of the app node system, extending its application to not just individual NFTs but also at the collection level.
+
+### 4.6 - App Items to an NFT
+
+Write permissions for new dapp items to the dap node are defined in the "icrc59:app:manage" data item at the top of collection metadata.  This item should be copied into the system node upon minting and applied to the NFT.  It should only be changeable via governance if the NFT collection accounts for that possibility. It MAY contain an array of permissions.
 
 ## 4.5 Files and Media
 
@@ -260,7 +262,7 @@ Note: This is only pseudo-privacy. It is likely that a media file may be recover
 
 ### 4.6 - Adding Library Items to an NFT
 
-Write permissions for new media library items is defined in the "icrc59:library:manage" data item at the top of collection metadata.  This item should be copied into the system node upon minting and applied to the NFT.  It should only be changeable via governance if the NFT collection accounts for that possibility.
+Write permissions for new media library items is defined in the "icrc59:library:manage" data item at the top of the collection metadata.  This item should be copied into the system node upon minting and applied to the NFT.  It should only be changeable via governance if the NFT collection accounts for that possibility. It MAY contain an array of permissions.
 
 ## 5. Dynamic Update Interface
 
