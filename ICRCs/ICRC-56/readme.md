@@ -5,7 +5,7 @@
 
 # Storage
 
-## Infinitely Scalable Multi-Canister Architecture
+## Infinitely Scalable Multi-Canister File System
 
 The canister file system (CFS) in the Internet Computer ecosystem is designed to offer infinitely scalable storage using a multi-canister architecture. This scalability is achieved through the capability to create and manage a network of interconnected canisters, each tailored to handle specific parts of the file system workload.
 
